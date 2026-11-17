@@ -2,4 +2,3 @@ streamlit
 pandas
 openpyxl
 scikit-learn
-deep-translator
