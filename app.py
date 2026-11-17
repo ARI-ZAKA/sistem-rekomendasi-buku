@@ -1,7 +1,8 @@
 import os
+import time
 import pandas as pd
 import streamlit as st
-from deep_translator import GoogleTranslator
+from deep_translator import GoogleTranslator, MyMemoryTranslator
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
@@ -38,10 +39,15 @@ def build_tfidf(texts: pd.Series):
 def translate_to_id(text: str) -> str:
     if not text or text == "Tidak ada deskripsi.":
         return text
+    snippet = text[:4500]
     try:
-        return GoogleTranslator(source="auto", target="id").translate(text[:4500])
+        time.sleep(0.25)
+        return GoogleTranslator(source="en", target="id").translate(snippet)
     except Exception:
-        return text
+        try:
+            return MyMemoryTranslator(source="en-GB", target="id-ID").translate(snippet[:500])
+        except Exception:
+            return text
 
 
 def get_recommendations(df: pd.DataFrame, tfidf_matrix, selected_title: str, top_n: int = 10) -> pd.DataFrame:
