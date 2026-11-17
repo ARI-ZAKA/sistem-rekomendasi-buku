@@ -1,6 +1,7 @@
 import os
 import pandas as pd
 import streamlit as st
+from deep_translator import GoogleTranslator
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
@@ -31,6 +32,16 @@ def build_tfidf(texts: pd.Series):
     vectorizer = TfidfVectorizer(stop_words="english", max_features=10000)
     tfidf_matrix = vectorizer.fit_transform(texts)
     return tfidf_matrix
+
+
+@st.cache_data(show_spinner=False)
+def translate_to_id(text: str) -> str:
+    if not text or text == "Tidak ada deskripsi.":
+        return text
+    try:
+        return GoogleTranslator(source="auto", target="id").translate(text[:4500])
+    except Exception:
+        return text
 
 
 def get_recommendations(df: pd.DataFrame, tfidf_matrix, selected_title: str, top_n: int = 10) -> pd.DataFrame:
@@ -74,7 +85,7 @@ if selected_title:
                 st.image(selected_row["image_url"], width=140)
         with col1:
             st.subheader(selected_row["title"])
-            st.write(selected_row["description"])
+            st.write(translate_to_id(selected_row["description"]))
         with col2:
             st.metric("Rating Rata-rata", f"⭐ {selected_row['average_rating']:.2f}")
             st.metric("Jumlah Rating", f"{int(selected_row['ratings_count']):,}")
@@ -99,7 +110,7 @@ if selected_title:
                     st.markdown(f"**{rank}. {row['title']}**")
                     st.caption(f"Genre/Tag: {row['shelves']}")
                     with st.expander("Lihat Sinopsis"):
-                        st.write(row["description"])
+                        st.write(translate_to_id(row["description"]))
                 with c2:
                     st.metric("Kemiripan", f"{row['similarity']}%")
                     st.caption(f"⭐ {row['average_rating']:.2f} ({int(row['ratings_count']):,} rating)")
